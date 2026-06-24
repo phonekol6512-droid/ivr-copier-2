@@ -25,35 +25,34 @@ def copy_module():
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- 🌟 המודול החכם והחסין שלך! 🌟 ---
+# --- 🌟 המודול החכם והחסין באמת! 🌟 ---
 @app.route('/copy-smart', methods=['GET', 'POST'])
 def copy_module_smart():
-    # יצירת מילון נקי לקליטת הנתונים
-    extracted_params = {}
+    # חילוץ חכם של הערכים מתוך ה-api_add_X שימות המשיח שולחת
+    def get_clean_param(param_name, fallback_var):
+        # 1. בודקים קודם כל אם המאזין הקיש את הנתון הזה בטלפון בשלבים הקודמים
+        if request.values.get(fallback_var):
+            return request.values.get(fallback_var).strip()
+            
+        # 2. אם לא הוקש בטלפון, נסרוק את ה-api_add_X שהגיעו מה-ext.ini
+        for key, value in request.values.items():
+            val_str = str(value).strip()
+            if "=" in val_str:
+                parts = val_str.split('=', 1)
+                if parts[0].strip() == param_name:
+                    return parts[1].strip()
+        return None
 
-    # סריקה ופירוק של השרשורים המעוותים של ימות המשיח (api_add_X=key=value)
-    for key, value in request.values.items():
-        key_str = str(key).strip()
-        val_str = str(value).strip()
-
-        # אם ימות המשיח שלחה את זה בפורמט המשולש: api_add_1 -> login1=0773016582
-        if "=" in val_str:
-            parts = val_str.split('=', 1)
-            extracted_params[parts[0].strip()] = parts[1].strip()
-        
-        # שמירת המפתחות הרגילים לגיבוי
-        extracted_params[key_str] = val_str
-
-    # שליפת המשתנים מתוך הנתונים שפורקו בבטחה
-    system_src = extracted_params.get('login1') or extracted_params.get('system_src')
-    pass_src = extracted_params.get('password1') or extracted_params.get('pass_src')
-    ext_src = extracted_params.get('key1') or extracted_params.get('ext_src')
+    # שליפת המשתנים במדויק לפי השמות שחבר שלך הגדיר!
+    system_src = get_clean_param('login1', 'system_src')
+    pass_src = get_clean_param('password1', 'pass_src')
+    ext_src = get_clean_param('key1', 'ext_src')
     
-    system_dst = extracted_params.get('login2') or extracted_params.get('system_dst')
-    pass_dst = extracted_params.get('password2') or extracted_params.get('pass_dst')
-    ext_dst = extracted_params.get('key2') or extracted_params.get('ext_dst')
+    system_dst = get_clean_param('login2', 'system_dst')
+    pass_dst = get_clean_param('password2', 'pass_dst')
+    ext_dst = get_clean_param('key2', 'ext_dst')
 
-    # הבדיקה החכמה: ישאל בטלפון רק את מה שלא הוגדר ב-ext.ini!
+    # הבדיקה החכמה: המערכת תשאל בטלפון רק את מה שלא חולץ בהצלחה מה-ext.ini!
     if not system_src: return ym_read("system_src", "t-אנא הקישו את מספר מערכת המקור ובסיומה סולמית")
     if not pass_src:   return ym_read("pass_src", "t-אנא הקישו את סיסמת מערכת המקור ובסיומה סולמית")
     if not ext_src:    return ym_read("ext_src", "t-אנא הקישו את מספר השלוחה להעתקה ובסיומה סולמית")
@@ -65,7 +64,7 @@ def copy_module_smart():
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- לוגיקת ההעתקה המשותפת ---
+# --- לוגיקת ההעתקה המשותפת (הנוסחה המנצחת שלך!) ---
 def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst):
     try:
         token_src = f"{system_src.strip()}:{pass_src.strip()}"
@@ -95,6 +94,7 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         return ym_say_and_hangup("t-התרחשה שגיאה בתקשורת עם השרתים.")
 
 def ym_read(var_name, text):
+    # הפורמט המנצח שאתה פיצחת בעצמך!
     res = make_response(f"read={text}={var_name},4,12,1,Digits")
     res.headers['Content-Type'] = 'text/plain; charset=utf-8'
     return res
