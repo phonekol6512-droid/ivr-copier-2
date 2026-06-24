@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 YEMOT_API_URL = "https://call2all.co.il"
 
-# --- המודול המקורי שלך (נשאר בדיוק אותו דבר, לא נוגעים בו!) ---
+# --- המודול המקורי שלך (נשאר בדיוק אותו דבר) ---
 @app.route('/copy-module', methods=['GET', 'POST'])
 def copy_module():
     system_src = request.values.get('system_src')
@@ -25,20 +25,19 @@ def copy_module():
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- 🌟 המודול החכם החדש שלך! 🌟 ---
+# --- 🌟 המודול החכם המעודכן והמתוקן שלך! 🌟 ---
 @app.route('/copy-smart', methods=['GET', 'POST'])
 def copy_module_smart():
-    # 1. קודם כל בודקים אם קיבלנו ערכים קבועים מה-ext.ini (לפי הדוגמה שלך)
-    # אם הם לא קיימים ב-ext.ini, ננסה לקחת את מה שהמאזין הקיש בטלפון
-    system_src = request.values.get('login1') or request.values.get('system_src')
-    pass_src = request.values.get('password1') or request.values.get('pass_src')
-    ext_src = request.values.get('key1') or request.values.get('ext_src')
+    # התיקון כאן: אנחנו קוראים גם לפרמטרים הישירים וגם לפרמטרים המשורשרים שימות המשיח שולחת מה-ext.ini!
+    system_src = request.values.get('login1') or request.values.get('api_add_1_login1') or request.values.get('api_add_1') or request.values.get('system_src')
+    pass_src = request.values.get('password1') or request.values.get('api_add_2_password1') or request.values.get('api_add_2') or request.values.get('pass_src')
+    ext_src = request.values.get('key1') or request.values.get('api_add_3_key1') or request.values.get('api_add_3') or request.values.get('ext_src')
     
-    system_dst = request.values.get('login2') or request.values.get('system_dst')
-    pass_dst = request.values.get('password2') or request.values.get('pass_dst')
-    ext_dst = request.values.get('key2') or request.values.get('ext_dst')
+    system_dst = request.values.get('login2') or request.values.get('api_add_4_login2') or request.values.get('api_add_4') or request.values.get('system_dst')
+    pass_dst = request.values.get('password2') or request.values.get('api_add_5_password2') or request.values.get('api_add_5') or request.values.get('pass_dst')
+    ext_dst = request.values.get('key2') or request.values.get('api_add_6_key2') or request.values.get('api_add_6') or request.values.get('ext_dst')
 
-    # 2. בדיקה חכמה: המערכת תשאל בטלפון רק את מה שעדיין ריק!
+    # הבדיקה החכמה: ישאל בטלפון רק אם המשתנה לא הגיע בשום צורה מה-ext.ini
     if not system_src: return ym_read("system_src", "t-אנא הקישו את מספר מערכת המקור ובסיומה סולמית")
     if not pass_src:   return ym_read("pass_src", "t-אנא הקישו את סיסמת מערכת המקור ובסיומה סולמית")
     if not ext_src:    return ym_read("ext_src", "t-אנא הקישו את מספר השלוחה להעתקה ובסיומה סולמית")
@@ -47,11 +46,10 @@ def copy_module_smart():
     if not pass_dst:   return ym_read("pass_dst", "t-אנא הקישו את סיסמת מערכת היעד ובסיומה סולמית")
     if not ext_dst:    return ym_read("ext_dst", "t-אנא הקישו את שלוחת היעד החדשה ובסיומה סולמית")
 
-    # 3. הפעלת מנגנון ההעתקה ברגע שכל הנתונים קיימים
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- לוגיקת ההעתקה המשותפת לשני המודולים ---
+# --- לוגיקת ההעתקה המשותפת ---
 def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst):
     try:
         token_src = f"{system_src.strip()}:{pass_src.strip()}"
@@ -63,14 +61,12 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         path_src = f"ivr2:/{clean_src}/ext.ini"
         path_dst = f"ivr2:/{clean_dst}/ext.ini"
 
-        # הורדה מהמקור
         download_url = f"{YEMOT_API_URL}DownloadFile"
         src_response = requests.get(download_url, params={"token": token_src, "path": path_src})
 
         if src_response.status_code != 200 or "הסיסמא שגויה" in src_response.text or "לא נמצא" in src_response.text:
             return ym_say_and_hangup("t-שגיאה. נתוני מערכת המקור שגויים או שהשלוחה לא קיימת.")
 
-        # העלאה ליעד
         upload_url = f"{YEMOT_API_URL}UploadTextFile?token={token_dst}&what={path_dst}&contents={requests.utils.quote(src_response.text)}"
         dst_response = requests.post(upload_url)
 
@@ -83,7 +79,6 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         return ym_say_and_hangup("t-התרחשה שגיאה בתקשורת עם השרתים.")
 
 def ym_read(var_name, text):
-    # הפורמט המנצח והבדוק שלך שעובד פיקס
     res = make_response(f"read={text}={var_name},4,12,1,Digits")
     res.headers['Content-Type'] = 'text/plain; charset=utf-8'
     return res
