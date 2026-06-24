@@ -25,25 +25,35 @@ def copy_module():
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- 🌟 המודול החכם המעודכן והחסין שלך! 🌟 ---
+# --- 🌟 המודול החכם והחסין שלך! 🌟 ---
 @app.route('/copy-smart', methods=['GET', 'POST'])
 def copy_module_smart():
-    # סריקה חכמה של כל המשתנים שמגיעים כדי לנקות רווחים ותווים נסתרים מימות המשיח
-    incoming_data = {}
+    # יצירת מילון נקי לקליטת הנתונים
+    extracted_params = {}
+
+    # סריקה ופירוק של השרשורים המעוותים של ימות המשיח (api_add_X=key=value)
     for key, value in request.values.items():
-        if value:
-            incoming_data[key.strip()] = str(value).strip()
+        key_str = str(key).strip()
+        val_str = str(value).strip()
 
-    # שליפת הנתונים - בודק את כל האפשרויות שהמערכת שלחה
-    system_src = incoming_data.get('login1') or incoming_data.get('system_src')
-    pass_src = incoming_data.get('password1') or incoming_data.get('pass_src')
-    ext_src = incoming_data.get('key1') or incoming_data.get('ext_src')
+        # אם ימות המשיח שלחה את זה בפורמט המשולש: api_add_1 -> login1=0773016582
+        if "=" in val_str:
+            parts = val_str.split('=', 1)
+            extracted_params[parts[0].strip()] = parts[1].strip()
+        
+        # שמירת המפתחות הרגילים לגיבוי
+        extracted_params[key_str] = val_str
+
+    # שליפת המשתנים מתוך הנתונים שפורקו בבטחה
+    system_src = extracted_params.get('login1') or extracted_params.get('system_src')
+    pass_src = extracted_params.get('password1') or extracted_params.get('pass_src')
+    ext_src = extracted_params.get('key1') or extracted_params.get('ext_src')
     
-    system_dst = incoming_data.get('login2') or incoming_data.get('system_dst')
-    pass_dst = incoming_data.get('password2') or incoming_data.get('pass_dst')
-    ext_dst = incoming_data.get('key2') or incoming_data.get('ext_dst')
+    system_dst = extracted_params.get('login2') or extracted_params.get('system_dst')
+    pass_dst = extracted_params.get('password2') or extracted_params.get('pass_dst')
+    ext_dst = extracted_params.get('key2') or extracted_params.get('ext_dst')
 
-    # הבדיקה החכמה: המערכת תשאל בטלפון רק את מה שנשאר ריק לחלוטין!
+    # הבדיקה החכמה: ישאל בטלפון רק את מה שלא הוגדר ב-ext.ini!
     if not system_src: return ym_read("system_src", "t-אנא הקישו את מספר מערכת המקור ובסיומה סולמית")
     if not pass_src:   return ym_read("pass_src", "t-אנא הקישו את סיסמת מערכת המקור ובסיומה סולמית")
     if not ext_src:    return ym_read("ext_src", "t-אנא הקישו את מספר השלוחה להעתקה ובסיומה סולמית")
