@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 YEMOT_API_URL = "https://call2all.co.il"
 
-# --- המודול המקורי שלך (נשאר בדיוק אותו דבר) ---
+# --- המודול המקורי שלך (ללא שינוי) ---
 @app.route('/copy-module', methods=['GET', 'POST'])
 def copy_module():
     system_src = request.values.get('system_src')
@@ -25,19 +25,25 @@ def copy_module():
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- 🌟 המודול החכם המעודכן והמתוקן שלך! 🌟 ---
+# --- 🌟 המודול החכם המעודכן והחסין שלך! 🌟 ---
 @app.route('/copy-smart', methods=['GET', 'POST'])
 def copy_module_smart():
-    # התיקון כאן: אנחנו קוראים גם לפרמטרים הישירים וגם לפרמטרים המשורשרים שימות המשיח שולחת מה-ext.ini!
-    system_src = request.values.get('login1') or request.values.get('api_add_1_login1') or request.values.get('api_add_1') or request.values.get('system_src')
-    pass_src = request.values.get('password1') or request.values.get('api_add_2_password1') or request.values.get('api_add_2') or request.values.get('pass_src')
-    ext_src = request.values.get('key1') or request.values.get('api_add_3_key1') or request.values.get('api_add_3') or request.values.get('ext_src')
-    
-    system_dst = request.values.get('login2') or request.values.get('api_add_4_login2') or request.values.get('api_add_4') or request.values.get('system_dst')
-    pass_dst = request.values.get('password2') or request.values.get('api_add_5_password2') or request.values.get('api_add_5') or request.values.get('pass_dst')
-    ext_dst = request.values.get('key2') or request.values.get('api_add_6_key2') or request.values.get('api_add_6') or request.values.get('ext_dst')
+    # סריקה חכמה של כל המשתנים שמגיעים כדי לנקות רווחים ותווים נסתרים מימות המשיח
+    incoming_data = {}
+    for key, value in request.values.items():
+        if value:
+            incoming_data[key.strip()] = str(value).strip()
 
-    # הבדיקה החכמה: ישאל בטלפון רק אם המשתנה לא הגיע בשום צורה מה-ext.ini
+    # שליפת הנתונים - בודק את כל האפשרויות שהמערכת שלחה
+    system_src = incoming_data.get('login1') or incoming_data.get('system_src')
+    pass_src = incoming_data.get('password1') or incoming_data.get('pass_src')
+    ext_src = incoming_data.get('key1') or incoming_data.get('ext_src')
+    
+    system_dst = incoming_data.get('login2') or incoming_data.get('system_dst')
+    pass_dst = incoming_data.get('password2') or incoming_data.get('pass_dst')
+    ext_dst = incoming_data.get('key2') or incoming_data.get('ext_dst')
+
+    # הבדיקה החכמה: המערכת תשאל בטלפון רק את מה שנשאר ריק לחלוטין!
     if not system_src: return ym_read("system_src", "t-אנא הקישו את מספר מערכת המקור ובסיומה סולמית")
     if not pass_src:   return ym_read("pass_src", "t-אנא הקישו את סיסמת מערכת המקור ובסיומה סולמית")
     if not ext_src:    return ym_read("ext_src", "t-אנא הקישו את מספר השלוחה להעתקה ובסיומה סולמית")
