@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 YEMOT_API_URL = "https://www.call2all.co.il/ym/api/"
 
-# --- מודול רגיל (מבקש הכל תמיד) ---
+# --- המודול המקורי שלך (ללא שינוי, תמיד עובד) ---
 @app.route('/copy-module', methods=['GET', 'POST'])
 def copy_module():
     system_src = request.values.get('system_src')
@@ -25,47 +25,53 @@ def copy_module():
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- 🌟 המודול החכם והסופי שלך (תואם פורמט ימות המשיח) 🌟 ---
+# --- 🌟 המודול החכם המעודכן והחסין (תואם פורמט PHP) 🌟 ---
 @app.route('/copy-smart', methods=['GET', 'POST'])
 def copy_module_smart():
-    # פונקציית עזר לחילוץ הערך האמיתי מתוך השרשור של ימות המשיח (למשל מתוך login1=0773016582)
-    def parse_yemot_val(prefix, phone_var):
-        # בדיקה אם המאזין כבר הקיש את הנתון הזה בשלב קודם בטלפון
-        if request.values.get(phone_var):
-            return request.values.get(phone_var).strip()
+    extracted = {}
+
+    # סריקה חסינה: בגלל שימות המשיח שולחת שני סימני שווה, המפתח או הערך יכולים להכיל את המילים!
+    for key, value in request.values.items():
+        key_str = str(key).strip()
+        val_str = str(value).strip()
+
+        # בדיקה אם המילה מופיעה בשם המשתנה או בערך שלו (פותר את הבעיה של הפיצול ה-HTTP)
+        if "login1" in key_str or "login1" in val_str:
+            extracted['login1'] = val_str.split('=')[-1] if '=' in val_str else val_str
+        if "password1" in key_str or "password1" in val_str:
+            extracted['password1'] = val_str.split('=')[-1] if '=' in val_str else val_str
+        if "key1" in key_str or "key1" in val_str:
+            extracted['key1'] = val_str.split('=')[-1] if '=' in val_str else val_str
             
-        # סריקה של כל הפרמטרים שהגיעו מה-ext.ini (api_add_0, api_add_1 וכו')
-        for key, value in request.values.items():
-            val_str = str(value).strip()
-            if "=" in val_str:
-                parts = val_str.split('=', 1)
-                # אם מצאנו את השם המבוקש (למשל login1)
-                if parts[0].strip() == prefix:
-                    return parts[1].strip()
-        return None
+        if "login2" in key_str or "login2" in val_str:
+            extracted['login2'] = val_str.split('=')[-1] if '=' in val_str else val_str
+        if "password2" in key_str or "password2" in val_str:
+            extracted['password2'] = val_str.split('=')[-1] if '=' in val_str else val_str
+        if "key2" in key_str or "key2" in val_str:
+            extracted['key2'] = val_str.split('=')[-1] if '=' in val_str else val_str
 
-    # שליפת הפרמטרים במדויק מתוך שורות ה-api_add!
-    system_src = parse_yemot_val('login1', 'system_src')
-    pass_src = parse_yemot_val('password1', 'pass_src')
-    ext_src = parse_yemot_val('key1', 'ext_src')
+    # שליפת המשתנים הסופיים: עדיפות ראשונה למה שחולץ מהקובץ, עדיפות שנייה להקשה בטלפון
+    system_src = extracted.get('login1') or request.values.get('system_src')
+    pass_src = extracted.get('password1') or request.values.get('pass_src')
+    ext_src = extracted.get('key1') or request.values.get('ext_src')
     
-    system_dst = parse_yemot_val('login2', 'system_dst')
-    pass_dst = parse_yemot_val('password2', 'pass_dst')
-    ext_dst = parse_yemot_val('key2', 'ext_dst')
+    system_dst = extracted.get('login2') or request.values.get('system_dst')
+    pass_dst = extracted.get('password2') or request.values.get('pass_dst')
+    ext_dst = extracted.get('key2') or request.values.get('ext_dst')
 
-    # הבדיקה החכמה: המערכת תשאל בטלפון רק את מה שלא הוגדר מראש ב-ext.ini!
-    if not system_src: return ym_read("system_src", "t-אנא הקישו את מספר מערכת המקור ובסיומה סולמית")
-    if not pass_src:   return ym_read("pass_src", "t-אנא הקישו את סיסמת מערכת המקור ובסיומה סולמית")
-    if not ext_src:    return ym_read("ext_src", "t-אנא הקישו את מספר השלוחה להעתקה ובסיומה סולמית")
+    # הבדיקה החכמה: המערכת תשאל בטלפון אך ורק אם המשתנה לא קיים בשום מקום (ריק)
+    if not system_src or str(system_src).strip() == "": return ym_read("system_src", "t-אנא הקישו את מספר מערכת המקור ובסיומה סולמית")
+    if not pass_src or str(pass_src).strip() == "":   return ym_read("pass_src", "t-אנא הקישו את סיסמת מערכת המקור ובסיומה סולמית")
+    if not ext_src or str(ext_src).strip() == "":    return ym_read("ext_src", "t-אנא הקישו את מספר השלוחה להעתקה ובסיומה סולמית")
     
-    if not system_dst: return ym_read("system_dst", "t-אנא הקישו את מספר מערכת היעד ובסיומה סולמית")
-    if not pass_dst:   return ym_read("pass_dst", "t-אנא הקישו את סיסמת מערכת היעד ובסיומה סולמית")
-    if not ext_dst:    return ym_read("ext_dst", "t-אנא הקישו את שלוחת היעד החדשה ובסיומה סולמית")
+    if not system_dst or str(system_dst).strip() == "": return ym_read("system_dst", "t-אנא הקישו את מספר מערכת היעד ובסיומה סולמית")
+    if not pass_dst or str(pass_dst).strip() == "":   return ym_read("pass_dst", "t-אנא הקישו את סיסמת מערכת היעד ובסיומה סולמית")
+    if not ext_dst or str(ext_dst).strip() == "":    return ym_read("ext_dst", "t-אנא הקישו את שלוחת היעד החדשה ובסיומה סולמית")
 
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- לוגיקת ההעתקה המשותפת ---
+# --- לוגיקת ההעתקה המשותפת של המערכת ---
 def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst):
     try:
         token_src = f"{system_src.strip()}:{pass_src.strip()}"
@@ -95,7 +101,7 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         return ym_say_and_hangup("t-התרחשה שגיאה בתקשורת עם השרתים.")
 
 def ym_read(var_name, text):
-    # הפורמט המנצח שלך!
+    # פורמט ההקשות המנצח והיציב שאתה פיצחת בעצמך!
     res = make_response(f"read={text}={var_name},4,12,1,Digits")
     res.headers['Content-Type'] = 'text/plain; charset=utf-8'
     return res
