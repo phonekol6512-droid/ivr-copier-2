@@ -15,12 +15,12 @@ def copy_module():
     pass_dst = request.values.get('pass_dst')
     ext_dst = request.values.get('ext_dst')
 
-    if not system_src: return ym_read("system_src", "t-אנא הקישו את מספר מערכת המקור ובסיומה סולמית")
-    if not pass_src:   return ym_read("pass_src", "t-אנא הקישו את סיסמת מערכת המקור ובסיומה סולמית")
-    if not ext_src:    return ym_read("ext_src", "t-אנא הקישו את מספר השלוחה להעתקה ובסיומה סולמית")
-    if not system_dst: return ym_read("system_dst", "t-אנא הקישו את מספר מערכת היעד ובסיומה סולמית")
-    if not pass_dst:   return ym_read("pass_dst", "t-אנא הקישו את סיסמת מערכת היעד ובסיומה סולמית")
-    if not ext_dst:    return ym_read("ext_dst", "t-אנא הקישו את שלוחת היעד החדשה ובסיומה סולמית")
+    if not system_src: return ym_read("system_src", "t-אנא הקישו את מספר המערכת שברצונכם להעתיק ממנה את השלוחה, בסיום הקישו סולמית")
+    if not pass_src:   return ym_read("pass_src", "t-אנא הקישו את סיסמת מערכת  ובסיום הקישו סולמית")
+    if not ext_src:    return ym_read("ext_src", "t-אנא הקישו את מספר השלוחה להעתקה ובסיום הקישו סולמית")
+    if not system_dst: return ym_read("system_dst", "t-אנא הקישו את מספר מערכת ובסיום הקישו סולמית")
+    if not pass_dst:   return ym_read("pass_dst", "t-אנא הקישו את סיסמת המערכת ובסיום הקישו סולמית")
+    if not ext_dst:    return ym_read("ext_dst", "t-אנא הקישו את השלוחה שברצונכם להגדיר בסיום הקישו סולמית")
 
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
