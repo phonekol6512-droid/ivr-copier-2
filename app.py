@@ -79,17 +79,18 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         path_src = f"ivr2:/{clean_src}/ext.ini"
         path_dst = f"ivr2:/{clean_dst}/ext.ini"
 
+        # 1. הורדת הקובץ ממערכת המקור
         download_url = f"{YEMOT_API_URL}DownloadFile"
         src_response = requests.get(download_url, params={"token": token_src, "path": path_src})
 
         if src_response.status_code != 200 or "הסיסמא שגויה" in src_response.text or "לא נמצא" in src_response.text:
             return ym_say_and_hangup("t-שגיאה. נתוני מערכת המקור שגויים או שהשלוחה לא קיימת.")
 
-        # חילוץ תוכן הקובץ והוספת שורת הקרדיט החדשה עם רווחים מדויקים!
+        # חילוץ תוכן הקובץ והוספת שורת הקרדיט באותיות נקיות ללא גרשים!
         ini_content = src_response.text
         ini_content += "\ntitle=שלוחה זאת הוגדרה על ידי פון קול"
 
-        # העלאת הקובץ המעודכן למערכת היעד
+        # 2. העלאת הקובץ המעודכן למערכת היעד
         upload_url = f"{YEMOT_API_URL}UploadTextFile?token={token_dst}&what={path_dst}&contents={requests.utils.quote(ini_content)}"
         dst_response = requests.post(upload_url)
 
