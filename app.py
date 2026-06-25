@@ -3,9 +3,9 @@ from flask import Flask, request, make_response
 
 app = Flask(__name__)
 
-YEMOT_API_URL = "https://call2all.co.il"
+YEMOT_API_URL = "https://www.call2all.co.il/ym/api/"
 
-# --- המודול המקורי שלך (ללא שינוי, תמיד עובד) ---
+# --- מודול רגיל (מבקש הכל תמיד) ---
 @app.route('/copy-module', methods=['GET', 'POST'])
 def copy_module():
     system_src = request.values.get('system_src')
@@ -25,44 +25,47 @@ def copy_module():
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- 🌟 המודול החכם המעודכן (מותאם לפורמט ה-PHP של ימות המשיח) 🌟 ---
+# --- 🌟 המודול החכם והסופי שלך (תואם פורמט ימות המשיח) 🌟 ---
 @app.route('/copy-smart', methods=['GET', 'POST'])
 def copy_module_smart():
-    # יצירת מילון שיחזיק את הפרמטרים שחולצו
-    extracted = {}
+    # פונקציית עזר לחילוץ הערך האמיתי מתוך השרשור של ימות המשיח (למשל מתוך login1=0773016582)
+    def parse_yemot_val(prefix, phone_var):
+        # בדיקה אם המאזין כבר הקיש את הנתון הזה בשלב קודם בטלפון
+        if request.values.get(phone_var):
+            return request.values.get(phone_var).strip()
+            
+        # סריקה של כל הפרמטרים שהגיעו מה-ext.ini (api_add_0, api_add_1 וכו')
+        for key, value in request.values.items():
+            val_str = str(value).strip()
+            if "=" in val_str:
+                parts = val_str.split('=', 1)
+                # אם מצאנו את השם המבוקש (למשל login1)
+                if parts[0].strip() == prefix:
+                    return parts[1].strip()
+        return None
 
-    # סריקה יסודית של כל ה-api_add_X שימות המשיח שולחת מה-ext.ini
-    for key, value in request.values.items():
-        val_str = str(value).strip()
-        # אם הערך מכיל סימן שווה (למשל: login1=0773016582)
-        if "=" in val_str:
-            parts = val_str.split('=', 1)
-            param_name = parts[0].strip()   # למשל: login1
-            param_value = parts[1].strip()  # למשל: 0773016582
-            extracted[param_name] = param_value
-
-    # שליפת המשתנים: עדיפות ראשונה למה שחולץ מה-ext.ini, עדיפות שנייה להקשת מאזין בטלפון
-    system_src = extracted.get('login1') or request.values.get('system_src')
-    pass_src = extracted.get('password1') or request.values.get('pass_src')
-    ext_src = extracted.get('key1') or request.values.get('ext_src')
+    # שליפת הפרמטרים במדויק מתוך שורות ה-api_add!
+    system_src = parse_yemot_val('login1', 'system_src')
+    pass_src = parse_yemot_val('password1', 'pass_src')
+    ext_src = parse_yemot_val('key1', 'ext_src')
     
-    system_dst = extracted.get('login2') or request.values.get('system_dst')
-    pass_dst = extracted.get('password2') or request.values.get('pass_dst')
-    ext_dst = extracted.get('key2') or request.values.get('ext_dst')
+    system_dst = parse_yemot_val('login2', 'system_dst')
+    pass_dst = parse_yemot_val('password2', 'pass_dst')
+    ext_dst = parse_yemot_val('key2', 'ext_dst')
 
-    # הבדיקה החכמה: ישאל בטלפון אך ורק אם המשתנה לא קיים בשום מקום (ריק)
-    if not system_src or system_src == "": return ym_read("system_src", "t-אנא הקישו את מספר מערכת המקור ובסיומה סולמית")
-    if not pass_src or pass_src == "":   return ym_read("pass_src", "t-אנא הקישו את סיסמת מערכת המקור ובסיומה סולמית")
-    if not ext_src or ext_src == "":    return ym_read("ext_src", "t-אנא הקישו את מספר השלוחה להעתקה ובסיומה סולמית")
+    # הבדיקה החכמה: המערכת תשאל בטלפון רק את מה שלא הוגדר מראש ב-ext.ini!
+    if not system_src: return ym_read("system_src", "t-אנא הקישו את מספר מערכת המקור ובסיומה סולמית")
+    if not pass_src:   return ym_read("pass_src", "t-אנא הקישו את סיסמת מערכת המקור ובסיומה סולמית")
+    if not ext_src:    return ym_read("ext_src", "t-אנא הקישו את מספר השלוחה להעתקה ובסיומה סולמית")
     
-    if not system_dst or system_dst == "": return ym_read("system_dst", "t-אנא הקישו את מספר מערכת היעד ובסיומה סולמית")
-    if not pass_dst or pass_dst == "":   return ym_read("pass_dst", "t-אנא הקישו את סיסמת מערכת היעד ובסיומה סולמית")
-    if not ext_dst or ext_dst == "":    return ym_read("ext_dst", "t-אנא הקישו את שלוחת היעד החדשה ובסיומה סולמית")
+    if not system_dst: return ym_read("system_dst", "t-אנא הקישו את מספר מערכת היעד ובסיומה סולמית")
+    if not pass_dst:   return ym_read("pass_dst", "t-אנא הקישו את סיסמת מערכת היעד ובסיומה סולמית")
+    if not ext_dst:    return ym_read("ext_dst", "t-אנא הקישו את שלוחת היעד החדשה ובסיומה סולמית")
 
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- לוגיקת ההעתקה המשותפת של המערכת ---
+# --- לוגיקת ההעתקה המשותפת ---
 def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst):
     try:
         token_src = f"{system_src.strip()}:{pass_src.strip()}"
@@ -92,7 +95,7 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         return ym_say_and_hangup("t-התרחשה שגיאה בתקשורת עם השרתים.")
 
 def ym_read(var_name, text):
-    # פורמט ההקשות המנצח והיציב שאתה פיצחת בעצמך!
+    # הפורמט המנצח שלך!
     res = make_response(f"read={text}={var_name},4,12,1,Digits")
     res.headers['Content-Type'] = 'text/plain; charset=utf-8'
     return res
