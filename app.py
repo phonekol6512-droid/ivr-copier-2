@@ -1,4 +1,5 @@
 import requests
+import re
 from flask import Flask, request, make_response
 
 app = Flask(__name__)
@@ -25,44 +26,44 @@ def copy_module():
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- המודול החכם והחסין שלך (תואם פורמט PHP) ---
+# --- 🌟 המודול החכם והחסין באמת (על בסיס המידע הגולמי) 🌟 ---
 @app.route('/copy-smart', methods=['GET', 'POST'])
 def copy_module_smart():
-    extracted = {}
-
-    for key, value in request.values.items():
-        key_str = str(key).strip()
-        val_str = str(value).strip()
-
-        if "login1" in key_str or "login1" in val_str:
-            extracted['login1'] = val_str.split('=')[-1] if '=' in val_str else val_str
-        if "password1" in key_str or "password1" in val_str:
-            extracted['password1'] = val_str.split('=')[-1] if '=' in val_str else val_str
-        if "key1" in key_str or "key1" in val_str:
-            extracted['key1'] = val_str.split('=')[-1] if '=' in val_str else val_str
+    # שואבים את כל הטקסט הגולמי שנשלח בבקשה (הן מהקישור והן מגוף הבקשה)
+    raw_data = request.query_string.decode('utf-8', errors='ignore') + "&" + request.get_data(as_text=True)
+    
+    # פונקציה פנימית לחילוץ ערכים באמצעות חיתוך טקסט ישיר (Regex) כדי לדלג על בעיות הפיצול
+    def find_raw_param(name, fallback_var):
+        # 1. בודקים אם המאזין כבר הקיש את זה בטלפון בשלב קודם
+        if request.values.get(fallback_var):
+            return request.values.get(fallback_var).strip()
             
-        if "login2" in key_str or "login2" in val_str:
-            extracted['login2'] = val_str.split('=')[-1] if '=' in val_str else val_str
-        if "password2" in key_str or "password2" in val_str:
-            extracted['password2'] = val_str.split('=')[-1] if '=' in val_str else val_str
-        if "key2" in key_str or "key2" in val_str:
-            extracted['key2'] = val_str.split('=')[-1] if '=' in val_str else val_str
+        # 2. מחפשים בטקסט הגולמי את התבנית של המשתנה מה-ext.ini (למשל login1=ספרות)
+        match = re.search(r'[\?&]api_add_\d+=' + name + r'=([^&]+)', raw_data)
+        if not match:
+            match = re.search(r'[\?&]' + name + r'=([^&]+)', raw_data)
+        
+        if match:
+            return requests.utils.unquote(match.group(1)).strip()
+        return None
 
-    system_src = extracted.get('login1') or request.values.get('system_src')
-    pass_src = extracted.get('password1') or request.values.get('pass_src')
-    ext_src = extracted.get('key1') or request.values.get('ext_src')
+    # שליפת המשתנים מהמידע הגולמי בצורה חסינה
+    system_src = find_raw_param('login1', 'system_src')
+    pass_src = find_raw_param('password1', 'pass_src')
+    ext_src = find_raw_param('key1', 'ext_src')
     
-    system_dst = extracted.get('login2') or request.values.get('system_dst')
-    pass_dst = extracted.get('password2') or request.values.get('pass_dst')
-    ext_dst = extracted.get('key2') or request.values.get('ext_dst')
+    system_dst = find_raw_param('login2', 'system_dst')
+    pass_dst = find_raw_param('password2', 'pass_dst')
+    ext_dst = find_raw_param('key2', 'ext_dst')
 
-    if not system_src or str(system_src).strip() == "": return ym_read("system_src", "t-אנא הקישו את מספר מערכת המקור ובסיומה סולמית")
-    if not pass_src or str(pass_src).strip() == "":   return ym_read("pass_src", "t-אנא הקישו את סיסמת מערכת המקור ובסיומה סולמית")
-    if not ext_src or str(ext_src).strip() == "":    return ym_read("ext_src", "t-אנא הקישו את מספר השלוחה להעתקה ובסיומה סולמית")
+    # הבדיקה החכמה: תשאל בטלפון רק את מה שלא חולץ בהצלחה מהקובץ
+    if not system_src or system_src == "": return ym_read("system_src", "t-אנא הקישו את מספר מערכת המקור ובסיומה סולמית")
+    if not pass_src or pass_src == "":   return ym_read("pass_src", "t-אנא הקישו את סיסמת מערכת המקור ובסיומה סולמית")
+    if not ext_src or ext_src == "":    return ym_read("ext_src", "t-אנא הקישו את מספר השלוחה להעתקה ובסיומה סולמית")
     
-    if not system_dst or str(system_dst).strip() == "": return ym_read("system_dst", "t-אנא הקישו את מספר מערכת היעד ובסיומה סולמית")
-    if not pass_dst or str(pass_dst).strip() == "":   return ym_read("pass_dst", "t-אנא הקישו את סיסמת מערכת היעד ובסיומה סולמית")
-    if not ext_dst or str(ext_dst).strip() == "":    return ym_read("ext_dst", "t-אנא הקישו את שלוחת היעד החדשה ובסיומה סולמית")
+    if not system_dst or system_dst == "": return ym_read("system_dst", "t-אנא הקישו את מספר מערכת היעד ובסיומה סולמית")
+    if not pass_dst or pass_dst == "":   return ym_read("pass_dst", "t-אנא הקישו את סיסמת מערכת היעד ובסיומה סולמית")
+    if not ext_dst or ext_dst == "":    return ym_read("ext_dst", "t-אנא הקישו את שלוחת היעד החדשה ובסיומה סולמית")
 
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
@@ -88,7 +89,7 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
         ini_content = src_response.text
 
-        # 🌟 התיקון כאן: הוספת השורה בצורה חלקה ובטוחה ללא סימנים כפולים משבשים 🌟
+        # הוספת שורת הקרדיט בסוף הקובץ המועתק
         ini_content += "\n\ntitle=שלוחה זאת הגדרה ע'י פון קול"
 
         # 2. העלאת הקובץ המשודרג למערכת היעד
