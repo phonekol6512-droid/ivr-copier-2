@@ -15,12 +15,12 @@ def copy_module():
     pass_dst = request.values.get('pass_dst')
     ext_dst = request.values.get('ext_dst')
 
-    if not system_src: return ym_read("system_src", "t-אנא הקישו את מספר המערכת שברצונכם להעתיק ממנה את השלוחה, בסיום הקישו סולמית")
-    if not pass_src:   return ym_read("pass_src", "t-אנא הקישו את סיסמת מערכת  ובסיום הקישו סולמית")
-    if not ext_src:    return ym_read("ext_src", "t-אנא הקישו את מספר השלוחה להעתקה ובסיום הקישו סולמית")
-    if not system_dst: return ym_read("system_dst", "t-אנא הקישו את מספר מערכת ובסיום הקישו סולמית")
-    if not pass_dst:   return ym_read("pass_dst", "t-אנא הקישו את סיסמת המערכת ובסיום הקישו סולמית")
-    if not ext_dst:    return ym_read("ext_dst", "t-אנא הקישו את השלוחה שברצונכם להגדיר בסיום הקישו סולמית")
+    if not system_src: return ym_read("system_src", "t-אָנָּא הַקִּישׁוּ אֶת מִסְפַּר הַמַּעֲרֶכֶת שֶׁבִּרְצוֹנְכֶם לְהַעְתִּיק מִמֶּנָּה אֶת הַשְּׁלוּחָה, בְּסִיּוּם הַקִּישׁוּ סֻלָּמִית")
+    if not pass_src:   return ym_read("pass_src", "t-אָנָּא הַקִּישׁוּ אֶת סִיסְמַת מַעֲרֶכֶת  וּבַסִּיּוּם הַקִּישׁוּ סֻלָּמִית")
+    if not ext_src:    return ym_read("ext_src", "t-אָנָּא הַקִּישׁוּ אֶת מִסְפַּר הַשְּׁלוּחָה לְהַעְתָּקָה וּבְסִיּוּם הַקִּישׁוּ סֻלָּמִית")
+    if not system_dst: return ym_read("system_dst", "t-אָנָּא הַקִּישׁוּ אֶת מִסְפַּר מַעֲרֶכֶת וּבְסִיּוּם הַקִּישׁוּ סֻלָּמִית")
+    if not pass_dst:   return ym_read("pass_dst", "t-אנָא הַקִּישׁוּ אֶת סִיסְמַת הַמַּעֲרֶכֶת וּבְסִיּוּם הַקִּישׁוּ סֻלָּמִית")
+    if not ext_dst:    return ym_read("ext_dst", "t- אָנָּא הַקִּישׁוּ אֶת הַשְּׁלוּחָה שֶׁבִּרְצוֹנְכֶם לְהַגְדִּיר בַּסִּיּוּם הַקִּישׁוּ סֻלָּמִית לִשְׁלוּחָה פְּנִימִית הַקִּישׁוּ כּוֹכָבִית בֵּין כָּל שְׁלוּחָה")
 
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
