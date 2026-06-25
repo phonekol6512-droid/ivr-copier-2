@@ -88,9 +88,8 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
         ini_content = src_response.text
 
-        # 🌟 הוספת השורה החדשה בסוף הקובץ המועתק 🌟
-        # מוסיף ירידת שורה ואת הכיתוב המבוקש
-        ini_content += "\n\ntitle=שלוחה זאת הגדרה ע\"י פון קול"
+        # 🌟 התיקון כאן: הוספת השורה בצורה חלקה ובטוחה ללא סימנים כפולים משבשים 🌟
+        ini_content += "\n\ntitle=שלוחה זאת הגדרה ע'י פון קול"
 
         # 2. העלאת הקובץ המשודרג למערכת היעד
         upload_url = f"{YEMOT_API_URL}UploadTextFile?token={token_dst}&what={path_dst}&contents={requests.utils.quote(ini_content)}"
