@@ -25,10 +25,10 @@ def copy_module():
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- 🌟 המודול החכם והסופי שלך (קליטה ישירה מה-URL) 🌟 ---
+# --- 🌟 המודול החכם והסופי שלך! 🌟 ---
 @app.route('/copy-smart', methods=['GET', 'POST'])
 def copy_module_smart():
-    # שליפת המשתנים בצורה ישירה ונקייה כפי שהם מגיעים מה-URL של ה-ext.ini
+    # קריאת הפרמטרים בצורה ישירה ונקייה כפי שהם מגיעים מה-URL של ה-ext.ini
     system_src = request.values.get('login1') or request.values.get('system_src')
     pass_src = request.values.get('password1') or request.values.get('pass_src')
     ext_src = request.values.get('key1') or request.values.get('ext_src')
@@ -70,12 +70,17 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
         ini_content = src_response.text
 
-        # הוספת שורת הקרדיט שביקשת בסוף הקובץ המועתק
+        # הוספת שורת הקרדיט בסוף קובץ ה-ext.ini החדש
         ini_content += "\n\ntitle=שלוחה זאת הגדרה ע'י פון קול"
 
-        # 2. העלאת הקובץ המשודרג למערכת היעד
-        upload_url = f"{YEMOT_API_URL}UploadTextFile?token={token_dst}&what={path_dst}&contents={requests.utils.quote(ini_content)}"
-        dst_response = requests.post(upload_url)
+        # 2. העלאת הקובץ המשודרג - שליחת המשתנים ב-POST תחת data לטעינה חסינה במקום ב-URL!
+        upload_url = f"{YEMOT_API_URL}UploadTextFile"
+        payload = {
+            "token": token_dst,
+            "what": path_dst,
+            "contents": ini_content.encode('utf-8')  # קידוד רשמי שמונע קריסות שרת בימות המשיח
+        }
+        dst_response = requests.post(upload_url, data=payload)
 
         if dst_response.status_code == 200 and '"responseStatus":"OK"' in dst_response.text:
             return ym_say_and_hangup("t-ההעתקה בוצעה בהצלחה. השלוחה הועתקה.")
@@ -86,7 +91,6 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         return ym_say_and_hangup("t-התרחשה שגיאה בתקשורת עם השרתים.")
 
 def ym_read(var_name, text):
-    # הפורמט המנצח שלך שעובד פיקס!
     res = make_response(f"read={text}={var_name},4,12,1,Digits")
     res.headers['Content-Type'] = 'text/plain; charset=utf-8'
     return res
