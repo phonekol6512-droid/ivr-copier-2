@@ -89,8 +89,10 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         if src_response.status_code != 200 or "הסיסמא שגויה" in src_response.text or "לא נמצא" in src_response.text:
             return ym_say_and_hangup("t-שגיאה. נתוני מערכת המקור שגויים או שהשלוחה לא קיימת.")
 
-        upload_url = f"{YEMOT_API_URL}UploadTextFile?token={token_dst}&what={path_dst}&contents={requests.utils.quote(src_response.text)}"
-        dst_response = requests.post(upload_url)
+        ini_content = src_response.text
+        ini_content += "\ntitle=שלוחה זאת הוגדרה על ידי פון קול"
+        upload_url = f"{YEMOT_API_URL}UploadTextFile?token={token_dst}&what={path_dst}&contents={requests.utils.quote(ini_content)}"
+
 
         if dst_response.status_code == 200 and '"responseStatus":"OK"' in dst_response.text:
             return ym_say_and_hangup("t-ההעתקה בוצעה בהצלחה. השלוחה הועתקה.")
