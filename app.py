@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 YEMOT_API_URL = "https://call2all.co.il"
 
-# --- המודול המקורי שלך (ללא שינוי, תמיד עובד) ---
+# --- המודול המקורי שלך (מבקש הכל תמיד) ---
 @app.route('/copy-module', methods=['GET', 'POST'])
 def copy_module():
     system_src = request.values.get('system_src')
@@ -25,7 +25,7 @@ def copy_module():
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- המודול החכם והחסין שלך (תואם פורמט PHP) ---
+# --- המודול החכם שלך (תואם פורמט PHP שעבד לך!) ---
 @app.route('/copy-smart', methods=['GET', 'POST'])
 def copy_module_smart():
     extracted = {}
@@ -67,7 +67,7 @@ def copy_module_smart():
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- לוגיקת ההעתקה המשותפת של המערכת ---
+# --- לוגיקת ההעתקה היציבה והמקורית שלך ---
 def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst):
     try:
         token_src = f"{system_src.strip()}:{pass_src.strip()}"
@@ -77,7 +77,7 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         clean_dst = ext_dst.strip().replace('*', '/').replace('-', '/').strip('/')
         
         path_src = f"ivr2:/{clean_src}/ext.ini"
-        path_dst = f"ivr2:/{clean_dst}/"  # ב-UploadFile הנתיב צריך להסתיים בתיקייה עצמה
+        path_dst = f"ivr2:/{clean_dst}/ext.ini"
 
         # 1. הורדת הקובץ ממערכת המקור
         download_url = f"{YEMOT_API_URL}DownloadFile"
@@ -86,27 +86,13 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         if src_response.status_code != 200 or "הסיסמא שגויה" in src_response.text or "לא נמצא" in src_response.text:
             return ym_say_and_hangup("t-שגיאה. נתוני מערכת המקור שגויים או שהשלוחה לא קיימת.")
 
-        ini_content = src_response.text
+        # שאיבת הטקסט הקיים והוספת שורת הקרדיט באנגלית כדי למנוע קריסות קידוד!
+        ini_content = src_response.text + "\n\ntitle=Phone-Kol"
 
-        # הוספת שורת הקרדיט הנדרשת בסוף קובץ ה-ext.ini החדש
-        ini_content += "\n\ntitle=שלוחה זאת הוגדרה על ידי פון קול"
-
-        # 2. 🌟 העלאה באמצעות פקודת UploadFile הרשמית והמאובטחת כקובץ Multipart 🌟
-        upload_url = f"{YEMOT_API_URL}UploadFile"
-        
-        # העברת המשתנים כחלק מהטופס הגולמי
-        data_payload = {
-            "token": token_dst,
-            "path": path_dst,
-            "convertAudio": "0"
-        }
-        
-        # המרת תוכן הטקסט לבייטים של UTF-8 ושליחתו כקובץ אמיתי
-        files_payload = {
-            'file': ('ext.ini', ini_content.encode('utf-8'), 'text/plain')
-        }
-        
-        dst_response = requests.post(upload_url, data=data_payload, files=files_payload)
+        # 2. העלאת הקובץ המשודרג
+        encoded_content = requests.utils.quote(ini_content)
+        upload_url = f"{YEMOT_API_URL}UploadTextFile?token={token_dst}&what={path_dst}&contents={encoded_content}"
+        dst_response = requests.post(upload_url)
 
         if dst_response.status_code == 200 and '"responseStatus":"OK"' in dst_response.text:
             return ym_say_and_hangup("t-ההעתקה בוצעה בהצלחה. השלוחה הועתקה.")
@@ -117,6 +103,7 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         return ym_say_and_hangup("t-התרחשה שגיאה בתקשורת עם השרתים.")
 
 def ym_read(var_name, text):
+    # הפורמט המנצח שלך!
     res = make_response(f"read={text}={var_name},4,12,1,Digits")
     res.headers['Content-Type'] = 'text/plain; charset=utf-8'
     return res
