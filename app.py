@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 YEMOT_API_URL = "https://call2all.co.il"
 
-# --- המודול המקורי שלך (מבקש הכל תמיד) ---
+# --- המודול המקורי שלך (ללא שינוי, תמיד עובד) ---
 @app.route('/copy-module', methods=['GET', 'POST'])
 def copy_module():
     system_src = request.values.get('system_src')
@@ -25,7 +25,7 @@ def copy_module():
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- המודול החכם שלך (תואם פורמט PHP שעבד לך!) ---
+# --- המודול החכם והחסין שלך (תואם פורמט PHP שעבד לך!) ---
 @app.route('/copy-smart', methods=['GET', 'POST'])
 def copy_module_smart():
     extracted = {}
@@ -67,7 +67,7 @@ def copy_module_smart():
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- לוגיקת ההעתקה היציבה והמקורית שלך ---
+# --- לוגיקת ההעתקה המקורית והמנצחת שלך ---
 def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst):
     try:
         token_src = f"{system_src.strip()}:{pass_src.strip()}"
@@ -79,19 +79,14 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         path_src = f"ivr2:/{clean_src}/ext.ini"
         path_dst = f"ivr2:/{clean_dst}/ext.ini"
 
-        # 1. הורדת הקובץ ממערכת המקור
         download_url = f"{YEMOT_API_URL}DownloadFile"
         src_response = requests.get(download_url, params={"token": token_src, "path": path_src})
 
         if src_response.status_code != 200 or "הסיסמא שגויה" in src_response.text or "לא נמצא" in src_response.text:
             return ym_say_and_hangup("t-שגיאה. נתוני מערכת המקור שגויים או שהשלוחה לא קיימת.")
 
-        # שאיבת הטקסט הקיים והוספת שורת הקרדיט באנגלית כדי למנוע קריסות קידוד!
-        ini_content = src_response.text + "\n\ntitle=Phone-Kol"
-
-        # 2. העלאת הקובץ המשודרג
-        encoded_content = requests.utils.quote(ini_content)
-        upload_url = f"{YEMOT_API_URL}UploadTextFile?token={token_dst}&what={path_dst}&contents={encoded_content}"
+        # העלאה המקורית והמדויקת שעבדה לך פיקס (ללא תוספות)!
+        upload_url = f"{YEMOT_API_URL}UploadTextFile?token={token_dst}&what={path_dst}&contents={requests.utils.quote(src_response.text)}"
         dst_response = requests.post(upload_url)
 
         if dst_response.status_code == 200 and '"responseStatus":"OK"' in dst_response.text:
@@ -103,7 +98,6 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         return ym_say_and_hangup("t-התרחשה שגיאה בתקשורת עם השרתים.")
 
 def ym_read(var_name, text):
-    # הפורמט המנצח שלך!
     res = make_response(f"read={text}={var_name},4,12,1,Digits")
     res.headers['Content-Type'] = 'text/plain; charset=utf-8'
     return res
