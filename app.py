@@ -85,7 +85,7 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         if src_response.status_code != 200 or "הסיסמא שגויה" in src_response.text or "לא נמצא" in src_response.text:
             return ym_say_and_hangup("t-שגיאה. נתוני מערכת המקור שגויים או שהשלוחה לא קיימת.")
 
-        # העלאה המקורית והמדויקת שעבדה לך פיקס (ללא שום תוספות!)
+        # העלאה המקורית והמדויקת שעבדה לך פיקס
         upload_url = f"{YEMOT_API_URL}UploadTextFile?token={token_dst}&what={path_dst}&contents={requests.utils.quote(src_response.text)}"
         dst_response = requests.post(upload_url)
 
@@ -103,7 +103,7 @@ def ym_read(var_name, text):
     return res
 
 def ym_say_and_hangup(text):
-    # הפורמט הרשמי והנכון ב-100% של ימות המשיח: משתמשים בנקודה-פסיק לקטיעת ה-API וניתוק חלקה!
+    # הפורמט הרשמי והנקי, ללא כפל פקודות וללא שגיאות!
     res = make_response(f"id_list_message={text};end_goto=chf")
     res.headers['Content-Type'] = 'text/plain; charset=utf-8'
     return res
