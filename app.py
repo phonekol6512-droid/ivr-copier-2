@@ -25,7 +25,7 @@ def copy_module():
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- 🌟 המודול החכם המעודכן והחסין (תואם פורמט PHP) 🌟 ---
+# --- המודול החכם המעודכן והחסין (תואם פורמט PHP) ---
 @app.route('/copy-smart', methods=['GET', 'POST'])
 def copy_module_smart():
     extracted = {}
@@ -89,7 +89,10 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         if src_response.status_code != 200 or "הסיסמא שגויה" in src_response.text or "לא נמצא" in src_response.text:
             return ym_say_and_hangup("t-שגיאה. נתוני מערכת המקור שגויים או שהשלוחה לא קיימת.")
 
-        upload_url = f"{YEMOT_API_URL}UploadTextFile?token={token_dst}&what={path_dst}&contents={requests.utils.quote(src_response.text)}"
+        # החיבור הישיר והמוגן כאן: שומרים את הטקסט, מדביקים את ה-title באנגלית, ומעלים
+        content_with_title = src_response.text + "\ntitle=Phone-Kol"
+
+        upload_url = f"{YEMOT_API_URL}UploadTextFile?token={token_dst}&what={path_dst}&contents={requests.utils.quote(content_with_title)}"
         dst_response = requests.post(upload_url)
 
         if dst_response.status_code == 200 and '"responseStatus":"OK"' in dst_response.text:
@@ -101,7 +104,6 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         return ym_say_and_hangup("t-התרחשה שגיאה בתקשורת עם השרתים.")
 
 def ym_read(var_name, text):
-    # פורמט ההקשות המנצח והיציב שאתה פיצחת בעצמך!
     res = make_response(f"read={text}={var_name},4,12,1,Digits")
     res.headers['Content-Type'] = 'text/plain; charset=utf-8'
     return res
