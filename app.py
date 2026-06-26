@@ -79,25 +79,15 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         path_src = f"ivr2:/{clean_src}/ext.ini"
         path_dst = f"ivr2:/{clean_dst}/ext.ini"
 
-        # 1. הורדת הקובץ ממערכת המקור
         download_url = f"{YEMOT_API_URL}DownloadFile"
         src_response = requests.get(download_url, params={"token": token_src, "path": path_src})
 
         if src_response.status_code != 200 or "הסיסמא שגויה" in src_response.text or "לא נמצא" in src_response.text:
             return ym_say_and_hangup("t-שגיאה. נתוני מערכת המקור שגויים או שהשלוחה לא קיימת.")
 
-        # שירשור שורת ה-title בצורה נקייה
-        ini_content = src_response.text + "\n\ntitle=שלוחה זאת הוגדרה על ידי פון קול"
-
-        # 2. 🌟 העלאה חסינה: שימוש במנגנון הפרמטרים המובנה של requests שמקודד אוטומטית ל-UTF-8 🌟
-        upload_url = f"{YEMOT_API_URL}UploadTextFile"
-        upload_params = {
-            "token": token_dst,
-            "what": path_dst,
-            "contents": ini_content
-        }
-        
-        dst_response = requests.post(upload_url, params=upload_params)
+        # העלאה המקורית והמדויקת שעבדה לך פיקס (ללא תוספות)!
+        upload_url = f"{YEMOT_API_URL}UploadTextFile?token={token_dst}&what={path_dst}&contents={requests.utils.quote(src_response.text)}"
+        dst_response = requests.post(upload_url)
 
         if dst_response.status_code == 200 and '"responseStatus":"OK"' in dst_response.text:
             return ym_say_and_hangup("t-ההעתקה בוצעה בהצלחה. השלוחה הועתקה.")
