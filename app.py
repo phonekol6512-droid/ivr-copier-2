@@ -25,7 +25,7 @@ def copy_module():
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- המודול החכם והחסין שלך (תואם פורמט PHP שעבד לך!) ---
+# --- המודול החכם והחסין שלך (תואם פורמט PHP) ---
 @app.route('/copy-smart', methods=['GET', 'POST'])
 def copy_module_smart():
     extracted = {}
@@ -53,7 +53,7 @@ def copy_module_smart():
     ext_src = extracted.get('key1') or request.values.get('ext_src')
     
     system_dst = extracted.get('login2') or request.values.get('system_dst')
-    pass_dst = request.values.get('password2') or request.values.get('pass_dst')
+    pass_dst = extracted.get('password2') or request.values.get('pass_dst')
     ext_dst = extracted.get('key2') or request.values.get('ext_dst')
 
     if not system_src or str(system_src).strip() == "": return ym_read("system_src", "t-אנא הקישו את מספר מערכת המקור ובסיומה סולמית")
@@ -67,7 +67,7 @@ def copy_module_smart():
     return run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
 
-# --- לוגיקת ההעתקה המקורית והמנצחת שלך ---
+# --- לוגיקת ההעתקה המשותפת של המערכת ---
 def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst):
     try:
         token_src = f"{system_src.strip()}:{pass_src.strip()}"
@@ -77,8 +77,9 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
         clean_dst = ext_dst.strip().replace('*', '/').replace('-', '/').strip('/')
         
         path_src = f"ivr2:/{clean_src}/ext.ini"
-        path_dst = f"ivr2:/{clean_dst}/ext.ini"
+        path_dst = f"ivr2:/{clean_dst}/"  # ב-UploadFile הנתיב צריך להסתיים בתיקייה עצמה
 
+        # 1. הורדת הקובץ ממערכת המקור
         download_url = f"{YEMOT_API_URL}DownloadFile"
         src_response = requests.get(download_url, params={"token": token_src, "path": path_src})
 
@@ -87,17 +88,25 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
 
         ini_content = src_response.text
 
-        # הוספת שורת הקרדיט בסוף קובץ ה-ext.ini החדש
+        # הוספת שורת הקרדיט הנדרשת בסוף קובץ ה-ext.ini החדש
         ini_content += "\n\ntitle=שלוחה זאת הוגדרה על ידי פון קול"
 
-        # התיקון הקריטי: העברת ה-contents לתוך ה-POST data כדי למנוע את שגיאת התקשורת!
-        upload_url = f"{YEMOT_API_URL}UploadTextFile"
-        payload = {
+        # 2. 🌟 העלאה באמצעות פקודת UploadFile הרשמית והמאובטחת כקובץ Multipart 🌟
+        upload_url = f"{YEMOT_API_URL}UploadFile"
+        
+        # העברת המשתנים כחלק מהטופס הגולמי
+        data_payload = {
             "token": token_dst,
-            "what": path_dst,
-            "contents": ini_content
+            "path": path_dst,
+            "convertAudio": "0"
         }
-        dst_response = requests.post(upload_url, data=payload)
+        
+        # המרת תוכן הטקסט לבייטים של UTF-8 ושליחתו כקובץ אמיתי
+        files_payload = {
+            'file': ('ext.ini', ini_content.encode('utf-8'), 'text/plain')
+        }
+        
+        dst_response = requests.post(upload_url, data=data_payload, files=files_payload)
 
         if dst_response.status_code == 200 and '"responseStatus":"OK"' in dst_response.text:
             return ym_say_and_hangup("t-ההעתקה בוצעה בהצלחה. השלוחה הועתקה.")
