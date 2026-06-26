@@ -90,7 +90,7 @@ def run_copy_logic(system_src, pass_src, ext_src, system_dst, pass_dst, ext_dst)
             return ym_say_and_hangup("t-שגיאה. נתוני מערכת המקור שגויים או שהשלוחה לא קיימת.")
 
         # החיבור הישיר והמוגן כאן: שומרים את הטקסט, מדביקים את ה-title באנגלית, ומעלים
-        content_with_title = src_response.text + "\ntitle=Phone-Kol"
+        content_with_title = src_response.text + "\ntitle=שלוחה זו נבנתה על ידי מערכת פון קול"
 
         upload_url = f"{YEMOT_API_URL}UploadTextFile?token={token_dst}&what={path_dst}&contents={requests.utils.quote(content_with_title)}"
         dst_response = requests.post(upload_url)
